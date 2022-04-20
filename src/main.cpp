@@ -52,9 +52,12 @@ void setup() {
   }
 }
 
+// Scans every row and column to find the key that is pressed.
 char scanKeys() {
-  char key = '\0';
+  char key = '\0'; // Set 'key' to null.
 
+  // Rowstate holds the true/false value of each row.
+  // The pressed column will flip a bit on position 'row' to one.
   byte rowState = 0;
   int column = -1;
   for (int row = 0; row < ROWS; row++) {
@@ -67,6 +70,7 @@ char scanKeys() {
         column = col;
       }
     }
+    // Set row pins back the input to get more accurate readings.
     MCP.pinMode(rowPins[row], INPUT);
   }
 
@@ -74,6 +78,9 @@ char scanKeys() {
   for (int i = 0; i < 8; i++) {
     if (bitRead(rowState, i)) {
       foundCols++;
+      // If there is only one active column, return the pressed key.
+      // If a bad reading occurs multiple columns will be found.
+      // So that is why this is a '==' check.
       if (foundCols == 1) key = keys[i][column];
     }
   }
