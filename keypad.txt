@@ -1,0 +1,35 @@
+The PHM I have is from a donor S60 built in 2005. The keys can be read the same way as a regular Arduino Matrix keypad you can buy online.
+
+The pinout I am going to use in this file is based on the 30 pin ribbon connector on the back of the PCB. Pin 1 being at the top, pin 30 at the bottom.
+
+Keys pinout:
+1:  GND
+2:  
+3:
+4:
+5:
+6:
+7:
+8:
+9:
+10: Backlight LEDs
+11: Power LED
+12: Column 1
+13: Column 2
+14: Column 3
+15: Row 1
+16: Row 2
+17: Row 3
+18: Row 4
+19: Row 5
+20: Row 6
+21:
+22:
+23:
+24:
+25:
+26:
+27:
+28: 
+29: 5V (maybe 3.3V works as well? I use 5V)
+30: GND
