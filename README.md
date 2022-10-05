@@ -4,6 +4,8 @@ This project is designed to work on an ESP32 connected to the official Volvo Pho
 
 !!! Currently this code is not ready to be used in any vehicle. A full rework is in progress. !!!
 
+## Update: I am currently trying to send custom text to the display.
+
 ## Todo
 - Indicate car battery level on iPhone.
 - Ability to use this device as a bluetooth keyboard to any device.
