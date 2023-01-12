@@ -1,104 +1,105 @@
-// Unavailable pins: 6,7,8,9,10,11
-// Input only: 34, 35, 36, 39
-#include <Wire.h>
-#include "MCP23017.h"
+#include <Arduino.h>
+#include "modules/display.h"
+#include "modules/keypad.h"
+#include "modules/bluetooth.h"
+#include "menus/mainmenu.h"
+#include "menus/songmenu.h"
 
-#define SDA 21 // YELLOW
-#define SCL 22 // BLUE
+#include <freertos/semphr.h>
 
-#define I2C_ONE 0x20
-//#define SCAN_DELAY 50
-#define SCAN_DELAY 25
+Display display = Display::getInstance();
+Keypad keypad;
 
-#define KP_NO 'N'
-#define KP_YES 'Y'
-#define KP_POWER 'T'
-#define KP_PREVIOUS 'P'
-#define KP_NEXT 'F'
-#define KP_CLEAR 'C'
-#define KP_EMPTY '`'
-#define BACKLIGHT_LEDS_PIN 33
+MainMenu mainMenu;
+SongMenu songMenu;
 
-#define ROWS 6
-#define COLUMNS 3
-
-char keys[ROWS][COLUMNS] = {
-  { KP_YES,      KP_POWER, KP_NO},
-  { KP_PREVIOUS, KP_CLEAR, KP_NEXT},
-  { '1',         '2',      '3'},
-  { '4',         '5',      '6'},
-  { '7',         '8',      '9'},
-  { '*',         '0',      '#'}
+Menu* menus[] = {
+    &mainMenu,
+    &songMenu
 };
 
-// Row pins are connected to port B
-byte rowPins[ROWS] = { 8, 9, 10, 11, 12, 13 };
-// Column pins are connected to port A
-byte columnPins[COLUMNS] = { 0, 1, 2 };
-MCP23017 MCP(0x20);
+SemaphoreHandle_t menuIndexSemaphore;
+int currentMenuIndex = 0;
+
+void onA2DConnectionChanged() {
+    if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
+        mainMenu.connected();
+        xSemaphoreGive(menuIndexSemaphore);
+    }
+}
+
+void onPhoneDetailsChanged(PhoneDetails detail, phoneData* data) {
+    if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
+        if (detail & NAME) {
+            mainMenu.setPhoneName(data->phoneName);
+        }
+
+        if (detail & SERVICE_PROVIDER) {
+            mainMenu.setServiceProvider(data->serviceProvider);
+            Serial.print(data->serviceProvider);
+            Serial.println("Updating service provider");
+        }
+
+        if (detail & BATTERY) {
+            mainMenu.setBatteryLevel(data->batteryLevel);
+            Serial.print(data->batteryLevel);
+            Serial.println("Updating battery level");
+        }
+
+        if (detail & ROAMING) {
+            mainMenu.setRoaming(data->roaming);
+            Serial.print(data->roaming);
+            Serial.println("Updating roaming");
+        }
+
+        if (detail & SERVICE_STRENGTH) {
+            mainMenu.setNetworkStrength(data->serviceStrength);
+            Serial.print(data->serviceStrength);
+            Serial.println("Updating service strength");
+        }
+        // currentMenuIndex = 1;
+        xSemaphoreGive(menuIndexSemaphore);
+    }
+}
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("Started");
-  Wire.begin();
-  MCP.begin();
+    Serial.begin(115200);
+    Serial.println("Started");
+    
+    menuIndexSemaphore = xSemaphoreCreateMutex();
+    xSemaphoreGive(menuIndexSemaphore);
 
-  for (int col = 0; col < COLUMNS; col++) {
-    MCP.pinMode(columnPins[col], INPUT_PULLUP);
-  }
+    keypad.begin();
 
-  for (int row = 0; row < ROWS; row++) {
-    MCP.pinMode(rowPins[row], INPUT);
-  }
+    bt_registerA2DCallback(&onA2DConnectionChanged);
+    bt_registerHFPCallback(&onPhoneDetailsChanged);
+    bt_registerPhoneDetailsCallback(&onPhoneDetailsChanged);
+    bt_begin();
+
+    display.turnOn();
+    display.clear();
+    display.print(menus[currentMenuIndex]->message);
 }
 
-// Scans every row and column to find the key that is pressed.
-char scanKeys() {
-  char key = '\0'; // Set 'key' to null.
-
-  // Rowstate holds the true/false value of each row.
-  // The pressed column will flip a bit on position 'row' to one.
-  byte rowState = 0;
-  int column = -1;
-  for (int row = 0; row < ROWS; row++) {
-    MCP.pinMode(rowPins[row], OUTPUT);
-    MCP.digitalWrite(rowPins[row], LOW);
-    delay(SCAN_DELAY);
-    for (int col = 0; col < COLUMNS; col++) {
-      if (MCP.digitalRead(columnPins[col]) == LOW) {
-        bitSet(rowState, row);
-        column = col;
-      }
-    }
-    // Set row pins back the input to get more accurate readings.
-    MCP.pinMode(rowPins[row], INPUT);
-  }
-
-  int foundCols = 0;
-  for (int i = 0; i < 8; i++) {
-    if (bitRead(rowState, i)) {
-      foundCols++;
-      // If there is only one active column, return the pressed key.
-      // If a bad reading occurs multiple columns will be found.
-      // So that is why this is a '==' check.
-      if (foundCols == 1) key = keys[i][column];
-    }
-  }
-  
-  return key;
-}
-
-char getKey() {
-  return scanKeys();
-}
-
+unsigned long lastMillis = 0;
 void loop() {
-  char key = getKey();
+    unsigned long currentMillis = millis();
 
-  if (key) {
-    Serial.print("Key ");
-    Serial.print(key);
-    Serial.print(" pressed.");
-    Serial.println();
-  }
+    if (currentMillis - lastMillis > 1000) {
+        lastMillis = currentMillis;
+        if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
+            menus[currentMenuIndex]->update();
+            xSemaphoreGive(menuIndexSemaphore);
+        }
+
+        bt_update();
+    }
+    // char key = keypad.scanKeys();
+
+    // if (key) {
+    //     Serial.println(key);
+    // }
+
+    // delay(1000);
+    // display.scrollText(0, 0, 11, text, &textPos);
 }

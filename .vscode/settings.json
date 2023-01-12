@@ -1,0 +1,13 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "typeinfo": "cpp",
+        "stdint.h": "c",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "cstddef": "cpp",
+        "sstream": "cpp"
+    }
+}
