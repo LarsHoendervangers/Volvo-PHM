@@ -6,11 +6,18 @@
 
 class Canbus {
     public:
+        static Canbus& getInstance() {
+            static Canbus canbusInstance;
+            return canbusInstance;
+        };
         Canbus();
         void send(unsigned long id, unsigned char *data);
+        twai_message_t* read();
 
     private:
-        twai_message_t message;
+
+        twai_message_t txMsg;
+        twai_message_t rxMsg;
 };
 
 #endif

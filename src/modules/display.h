@@ -20,13 +20,13 @@ class Display {
         void clear();
         void clearLine(int line);
         void print(const char* text);
-        void scrollText(int line, int start, int end, const char* text, int* textPos);
-        void updateLine(int line, const char* text);
-        void updatePartialLine(int line, int start, int end, const char* text);
+        // void scrollText(int line, int start, int end, const char* text, int* textPos);
+        // void updateLine(int line, const char* text);
+        // void updatePartialLine(int line, int start, int end, const char* text);
     private:
         Display();
         char message[33] = "                                ";
-        Canbus canbus;
+        Canbus canbus = Canbus::getInstance();
 };
 
 #endif

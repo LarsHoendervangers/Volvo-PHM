@@ -29,49 +29,49 @@ void Display::clearLine(int line) {
     print(message);
 }
 
-/**
- * @brief Scrolls a string between a start and end index. Each time this method is called it will progress the scroll.
- * 
- * @param line The line on the display on which this text will scroll.
- * @param start Start position on the display.
- * @param end End position on the display.
- * @param text The text that has to be scrolled through (can be longer than the display width).
- * @param textPos The index at where to start printing the chars in the 'text' array.
- */
-void Display::scrollText(int line, int start, int end, const char* text, int* textPos) {
-    for (int i = start; i < end; i++) {
-        if (i + *textPos < strlen(text)) {
-            message[(line * 16) + i] = text[i + *textPos];
-        } else {
-            // End of text reached, loop or reset to beginning
-            message[(line * 16) + i] = 0x20; // Remove last char of string that is 'ghosting'.
-            *textPos = -1;
-            break;
-        }
-    }
-    *textPos += 1;
-    print(message);
-}
+// /**
+//  * @brief Scrolls a string between a start and end index. Each time this method is called it will progress the scroll.
+//  * 
+//  * @param line The line on the display on which this text will scroll.
+//  * @param start Start position on the display.
+//  * @param end End position on the display.
+//  * @param text The text that has to be scrolled through (can be longer than the display width).
+//  * @param textPos The index at where to start printing the chars in the 'text' array.
+//  */
+// void Display::scrollText(int line, int start, int end, const char* text, int* textPos) {
+//     for (int i = start; i < end; i++) {
+//         if (i + *textPos < strlen(text)) {
+//             message[(line * 16) + i] = text[i + *textPos];
+//         } else {
+//             // End of text reached, loop or reset to beginning
+//             message[(line * 16) + i] = 0x20; // Remove last char of string that is 'ghosting'.
+//             *textPos = -1;
+//             break;
+//         }
+//     }
+//     *textPos += 1;
+//     print(message);
+// }
 
-/**
- * @brief Updates a single line on the display.
- * 
- * @param line 0: upper line, 1: bottom line.
- * @param text Text to be displayed. Max 16 characters.
- */
-void Display::updateLine(int line, const char* text) {
-    for (int i = 16 * line; i < (16 * (line + 1)) - 1; i++) {
-        message[i] = text[i - (16 * line)];
-    }
-    print(message);
-}
+// /**
+//  * @brief Updates a single line on the display.
+//  * 
+//  * @param line 0: upper line, 1: bottom line.
+//  * @param text Text to be displayed. Max 16 characters.
+//  */
+// void Display::updateLine(int line, const char* text) {
+//     for (int i = 16 * line; i < (16 * (line + 1)) - 1; i++) {
+//         message[i] = text[i - (16 * line)];
+//     }
+//     print(message);
+// }
 
-void Display::updatePartialLine(int line, int start, int end, const char* text) {
-    for (int i = start + (16 * line); i < end + (16 * line); i++) {
-        message[i] = text[i - (16 * line)];
-    }
-    print(message);
-}
+// void Display::updatePartialLine(int line, int start, int end, const char* text) {
+//     for (int i = start + (16 * line); i < end + (16 * line); i++) {
+//         message[i] = text[i - (16 * line)];
+//     }
+//     print(message);
+// }
 
 /**
  * @brief Displays up to 32 characters on the display of a volvo DIM.
@@ -100,4 +100,5 @@ void Display::print(const char* text) {
     delay(MESSAGE_DELAY);
     uint8_t d5[] = {0x65, str[27], str[28], str[29], str[30], str[31], 0x00, 0x00};
     canbus.send(DISPLAY_MESSAGE_ID, d5);
+    delay(MESSAGE_DELAY);
 }

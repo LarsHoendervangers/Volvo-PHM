@@ -7,38 +7,28 @@ MainMenu::MainMenu() {
 
 void MainMenu::update() {
     if (firstUpdate) {
-        // TODO: ONLY DO THIS IF STATEMENT ON A2DP CONNECT.
         for (int i = 0; i < 32; i++) message[i] = ' ';
+        Display::getInstance().clear();
         firstUpdate = false;
+        Serial.println("Clearing display for inital main menu update.");
     }
 
     if (_phoneName != 0) { // Check if phoneName is not null
-        if (strlen(_phoneName) > 11) {
-            // for (int i = 0; i < 11; i++) {
-            //     int pos = i + textPos;
-            //     if (pos > strlen(_phoneName)) {
-            //         message[i] = ' ';
-            //         textPos = 0;
-            //         break;
-            //     } else {
-            //         message[i] = _phoneName[pos];
-            //     }
-            // }
-            
-            
+        if (strlen(_phoneName) > 11) {      
+            // Serial.printf("TextPos: %d, strlen - 11: %d\n", textPos, strlen(_phoneName) - 11);     
             for (int i = 0; i < 12; i++) {
-                if (i + textPos < strlen(_phoneName)) {
-                    message[i] = _phoneName[i + textPos];
-                } else if (textPos > i - textPos - 7) {
+                if (textPos > (strlen(_phoneName) - 11) - 1) {
                     // End of text reached, loop or reset to beginning
-                    message[i] = 0x20; // Remove last char of string that is 'ghosting'.
+                    // message[i] = 0x20; // Remove last char of string that is 'ghosting'.
                     textPos = -1;
                     break;
+                } else if (i + textPos < strlen(_phoneName)) {
+                    message[i] = _phoneName[i + textPos];
+                } else {
+                    Serial.println("phone name else");
                 }
             }
             textPos++;
-            
-            // Display::getInstance().scrollText(0, 0, 11, _phoneName, &textPos);
         }
     }
     
@@ -53,38 +43,14 @@ void MainMenu::setPhoneName(char* deviceName) {
     if (strlen(deviceName) < 12) {
         memcpy(message, deviceName, strlen(deviceName));
         shouldUpdate = true;
-    } else {
-        // TODO: Possibly this is not needed anymore.
-        strcat(_phoneName, " ");
     }
-
-    // if (_phoneName.length() <= 12) {
-    //     for (int i = 0; i < 12; i++) {
-    //         message[i] = _phoneName.charAt(i);
-    //     }
-    // }
-    // shouldUpdate = true;
-    // if (deviceName.length() < 12)
-    //     Display::getInstance().updatePartialLine(0, 0, 11, deviceName.c_str());
 }
 
 void MainMenu::setServiceProvider(char* networkProvider) {
     _networkProvider = networkProvider;
     Serial.print("Set network provider: ");
     Serial.println(networkProvider);
-    // for (int i = 16; i < 16 + 10; i++) {
-    //     message[i] = _networkProvider[i - 16];
-    //     Serial.print(message[i]);
-    //     // message.setCharAt(i, _networkProvider.charAt(i - 16));
-    // }
     memcpy(message + 16, networkProvider, 10);
-    
-    if (strlen(_networkProvider) > 10) {
-        // message[16 + 11] = '.';
-        // message[16 + 12] = '.';
-        // message.setCharAt(16 + 11, '.');
-        // message.setCharAt(16 + 12, '.');
-    }
     shouldUpdate = true;
 }
 

@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "modules/canbus.h"
 #include "modules/display.h"
 #include "modules/keypad.h"
 #include "modules/bluetooth.h"
@@ -6,6 +7,9 @@
 #include "menus/songmenu.h"
 
 #include <freertos/semphr.h>
+
+#define MAIN_MENU_INDEX 0
+#define SONG_MENU_INDEX 1
 
 Display display = Display::getInstance();
 Keypad keypad;
@@ -21,9 +25,14 @@ Menu* menus[] = {
 SemaphoreHandle_t menuIndexSemaphore;
 int currentMenuIndex = 0;
 
-void onA2DConnectionChanged() {
+void onA2DConnectionChanged(esp_a2d_connection_state_t state) {
     if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
-        mainMenu.connected();
+        if (state == ESP_A2D_CONNECTION_STATE_CONNECTED) {
+            mainMenu.connected();
+        } else if (state == ESP_A2D_CONNECTION_STATE_CONNECTING) {
+            // Display::getInstance().print("Verbinden met           telefoon");
+            Display::getInstance().print("Zoeken naar          telefoon...");
+        }
         xSemaphoreGive(menuIndexSemaphore);
     }
 }
@@ -57,9 +66,12 @@ void onPhoneDetailsChanged(PhoneDetails detail, phoneData* data) {
             Serial.print(data->serviceStrength);
             Serial.println("Updating service strength");
         }
-        // currentMenuIndex = 1;
         xSemaphoreGive(menuIndexSemaphore);
     }
+}
+
+void onSongUpdated(MusicDetails details, musicData* data) {
+
 }
 
 void setup() {
@@ -71,7 +83,8 @@ void setup() {
 
     keypad.begin();
 
-    bt_registerA2DCallback(&onA2DConnectionChanged);
+    bt_registerA2DSongCallback(&onSongUpdated);
+    bt_registerA2DConnectionCallback(&onA2DConnectionChanged);
     bt_registerHFPCallback(&onPhoneDetailsChanged);
     bt_registerPhoneDetailsCallback(&onPhoneDetailsChanged);
     bt_begin();
@@ -79,6 +92,31 @@ void setup() {
     display.turnOn();
     display.clear();
     display.print(menus[currentMenuIndex]->message);
+}
+
+void setCurrentMenuIndex(int index) {
+    if (index > sizeof(menus)) index = 0;
+    else if (index < 0) index = sizeof(menus);
+    if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
+        if (index > 0) currentMenuIndex++;
+        else if (index < 0) currentMenuIndex--;
+
+        if (currentMenuIndex > sizeof(menus) - 1) currentMenuIndex = 0;
+        else if (currentMenuIndex < sizeof(menus) - 1) currentMenuIndex = sizeof(menus) - 1;
+
+        currentMenuIndex = index;
+        xSemaphoreGive(menuIndexSemaphore);
+    }
+}
+
+void onKeyPressed(char key) {
+    if (!key) return;
+
+    if (key == KP_NEXT) {
+        setCurrentMenuIndex(1);
+    } else if (key == KP_PREVIOUS) {
+        setCurrentMenuIndex(-1);
+    }
 }
 
 unsigned long lastMillis = 0;
@@ -94,12 +132,6 @@ void loop() {
 
         bt_update();
     }
-    // char key = keypad.scanKeys();
-
-    // if (key) {
-    //     Serial.println(key);
-    // }
-
-    // delay(1000);
-    // display.scrollText(0, 0, 11, text, &textPos);
+    onKeyPressed(keypad.scanKeys());
+    // Canbus::getInstance().read();
 }

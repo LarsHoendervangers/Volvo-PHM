@@ -13,7 +13,7 @@ void SongMenu::update() {
 
     if (songTitle != 0) {
         if (songTitle.length() > 16) {
-            Display::getInstance().scrollText(0, 0, 16, songTitle.c_str(), &textPos);
+            // Display::getInstance().scrollText(0, 0, 16, songTitle.c_str(), &textPos);
         }
     }
 

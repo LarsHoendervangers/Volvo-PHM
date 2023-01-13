@@ -23,17 +23,28 @@ Canbus::Canbus() {
 }
 
 void Canbus::send(unsigned long id, unsigned char *data) {
-    message.identifier = id;
-    message.extd = 1;
-    message.data_length_code = 8;
+    txMsg.identifier = id;
+    txMsg.extd = 1;
+    txMsg.data_length_code = 8;
 
     for (int i = 0; i < 8; i++) {
-        message.data[i] = data[i];
-        // Serial.print("0x");
-        // Serial.print(message.data[i], HEX);
-        // Serial.print(" ");
+        txMsg.data[i] = data[i];
     }
-    // Serial.print(" Send status: ");
-    // Serial.println(twai_transmit(&message, pdMS_TO_TICKS(1000)));
-    twai_transmit(&message, pdMS_TO_TICKS(1000));
+    twai_transmit(&txMsg, pdMS_TO_TICKS(1000));
+}
+
+twai_message_t* Canbus::read() {
+    if (twai_receive(&rxMsg, pdMS_TO_TICKS(10000)) == ESP_OK) {
+        if (rxMsg.extd) {
+            printf("%x:", rxMsg.identifier & 0x1FFFFFFF);
+            if (!(rxMsg.rtr)) {
+                for (int i = 0; i < rxMsg.data_length_code; i++) {
+                    printf(" %x", rxMsg.data[i]);
+                }
+                printf("\n");
+                return &rxMsg;
+            }
+        }
+    }
+    return NULL;
 }

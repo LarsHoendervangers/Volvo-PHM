@@ -2,13 +2,14 @@
 
 const char deviceName[] = "My S60";
 phoneData sourceData;
+musicData songData;
 BluetoothA2DPSink a2dp_sink;
 void(*phoneDataCallback)(PhoneDetails, phoneData*);
 void(*hfpCallback)(PhoneDetails, phoneData*);
-void(*a2dpConnCallback)();
+void(*a2dpConnCallback)(esp_a2d_connection_state_t);
+void(*a2dpMusicCallback)(MusicDetails, musicData*);
 
 void bt_begin() {
-
     // A2D
     a2dp_sink.set_avrc_metadata_attribute_mask(ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_PLAYING_TIME | ESP_AVRC_MD_ATTR_ARTIST);
     a2dp_sink.set_avrc_metadata_callback(bt_a2d_cb);
@@ -63,14 +64,32 @@ void queryPhoneDetails() {
 // A2DP
 void bt_a2d_cb(uint8_t event, const uint8_t *param) {
     Serial.printf("A2D callback: attribute id 0x%x, %s\n", event, param);
+    MusicDetails details;
+    if (event == ESP_AVRC_MD_ATTR_TITLE) {
+        strcpy(songData.title, (const char*)param);
+        details = details | TITLE;
+    }
+
+    if (event == ESP_AVRC_MD_ATTR_ARTIST) {
+        strcpy(songData.artist, (const char*)param);
+        details = details | ARTIST;
+    }
+
+    if (event == ESP_AVRC_MD_ATTR_PLAYING_TIME) {
+        songData.duration = (int)param;
+        details = details | DURATION;
+    }
+
+    if (details != 0) {
+        a2dpMusicCallback(details, &songData);
+    }
 }
 
 void bt_a2d_conn_state_changed(esp_a2d_connection_state_t state, void *ptr) {
     if (state == ESP_A2D_CONNECTION_STATE_CONNECTED) {
-        Serial.println("Connected to A2DP");
-        a2dpConnCallback();
         seconds = 115;
     }
+    a2dpConnCallback(state);
 }
 
 void bt_registerPhoneDetailsCallback(void(callback)(PhoneDetails, phoneData*)) {
@@ -83,8 +102,8 @@ void bt_hfp_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param) 
     PhoneDetails details;
     if (event == ESP_HF_CLIENT_CIND_SERVICE_AVAILABILITY_EVT &&
         sourceData.serviceStrength != param->service_availability.status) {
-                sourceData.serviceStrength = param->service_availability.status;
-                details = details | SERVICE_STRENGTH;
+        sourceData.serviceStrength = param->service_availability.status;
+        details = details | SERVICE_STRENGTH;
     }
 
     if (event == ESP_HF_CLIENT_CIND_BATTERY_LEVEL_EVT &&
@@ -113,10 +132,31 @@ void bt_hfp_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param) 
     }
 }
 
-void bt_registerA2DCallback(void(*callback)()) {
+void bt_registerA2DConnectionCallback(void(*callback)(esp_a2d_connection_state_t)) {
     a2dpConnCallback = callback;
+}
+
+void bt_registerA2DSongCallback(void(*callback)(MusicDetails, musicData*)) {
+    a2dpMusicCallback = callback;
 }
 
 void bt_registerHFPCallback(void(callback)(PhoneDetails, phoneData*)) {
     hfpCallback = callback;
+}
+
+void bt_musicControl(MusicControl control) {
+    switch (control) {
+        case NEXT_TRACK:
+            a2dp_sink.next();
+            break;
+        case PREVIOUS_TRACK:
+            a2dp_sink.previous();
+            break;
+        case PAUSE:
+            a2dp_sink.pause();
+            break;
+        case PLAY:
+            a2dp_sink.play();
+            break;
+    }
 }
