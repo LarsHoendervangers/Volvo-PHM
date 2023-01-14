@@ -6,9 +6,9 @@ This project is designed to work on an ESP32 connected to the official Volvo Pho
 
 
 
-First of all, a **HUGE** thank you to Phuz from [Swedespeed](https://www.swedespeed.com) for helping me find the correct Canbus codes to sent text to the display on the DIM.
+First of all, a **HUGE** thank you to Phuz from [Swedespeed](https://www.swedespeed.com) for helping me find the correct Canbus codes to send text to the display on the DIM.
 
-In my testing I have found that the DIM has it's own set of extra characters (besides the standard ascii characters from 0x20 to 0x7D). I have recreated
+In my testing I have found that the DIM has its own set of extra characters (besides the standard ascii characters from 0x20 to 0x7D). I have recreated
 the custom chars on [this website](https://maxpromer.github.io/LCD-Character-Creator/) and put most of them in [this pdf](https://github.com/larslego/Volvo-PHM/blob/1a4ef09edf304cfe772891277dc4180d778dd996/VolvoDIM%20HEX%20Codes.pdf) for everyone to use as a reference.
 
 ## Todo
