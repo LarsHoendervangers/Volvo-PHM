@@ -7,16 +7,19 @@
 class SongMenu : public Menu {
     public:
         SongMenu();
-        void setSongTitle(String title);
-        void setSongArtist(String artist);
-        void setSongDuration(unsigned long duration);
+        void setSongTitle(char* title);
+        void setSongArtist(char* artist);
+        void setSongDuration(int duration);
+        void setSongPlayback(int playback);
         void setPlaying(bool playing) { isPlaying = playing; };
         void update();
     private:
+        bool shouldUpdate = 1;
         bool isPlaying = 0;
-        String songTitle;
-        String songArtist;
-        unsigned long int* songDuration;
+        char* songTitle;
+        char* songArtist;
+        int songDuration = 0;
+        int songPlayback = 0;
 };
 
 #endif

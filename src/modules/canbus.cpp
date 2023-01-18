@@ -8,17 +8,17 @@ Canbus::Canbus() {
 
     //Install TWAI driver
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
-        printf("Driver installed\n");
+        printf("TWAI Driver installed\n");
     } else {
-        printf("Failed to install driver\n");
+        printf("Failed to install TWAI driver\n");
         return;
     }
 
     //Start TWAI driver
     if (twai_start() == ESP_OK) {
-        printf("Driver started\n");
+        printf("TWAI Driver started\n");
     } else {
-        printf("Failed to start driver\n");
+        printf("Failed to start TWAI driver\n");
     }
 }
 

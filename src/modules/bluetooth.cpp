@@ -9,6 +9,17 @@ void(*hfpCallback)(PhoneDetails, phoneData*);
 void(*a2dpConnCallback)(esp_a2d_connection_state_t);
 void(*a2dpMusicCallback)(MusicDetails, musicData*);
 
+esp_avrc_rn_param_t rnParams;
+esp_avrc_rn_rsp_t rnResponse;
+
+void avrc_tg_callback(esp_avrc_tg_cb_t event, esp_avrc_tg_cb_param_t* param) {
+    Serial.printf("AVRC TG callback: attribute id 0x%x, %s\n", event, param);
+}
+
+void avrc_onAudioStateChangedCB(esp_a2d_audio_state_t state, void* param) {
+    Serial.printf("AVRC audio state changed callback: %s\n", a2dp_sink.to_str(state));
+}
+
 void bt_begin() {
     // A2D
     a2dp_sink.set_avrc_metadata_attribute_mask(ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_PLAYING_TIME | ESP_AVRC_MD_ATTR_ARTIST);
@@ -39,6 +50,9 @@ void bt_begin() {
     // HFP
     esp_hf_client_register_callback(bt_hfp_cb);
     esp_hf_client_init();
+
+    a2dp_sink.set_on_audio_state_changed(avrc_onAudioStateChangedCB);
+    // esp_avrc_tg_register_callback(avrc_tg_callback);
 }
 
 int seconds = 0;
@@ -76,8 +90,13 @@ void bt_a2d_cb(uint8_t event, const uint8_t *param) {
     }
 
     if (event == ESP_AVRC_MD_ATTR_PLAYING_TIME) {
-        songData.duration = (int)param;
+        songData.duration = atoi((const char*)param);
         details = details | DURATION;
+    }
+
+    if (event == ESP_AVRC_PLAYBACK_PLAYING) {
+        songData.playback = (int)param;
+        details = details | PLAYBACK;
     }
 
     if (details != 0) {
@@ -87,7 +106,8 @@ void bt_a2d_cb(uint8_t event, const uint8_t *param) {
 
 void bt_a2d_conn_state_changed(esp_a2d_connection_state_t state, void *ptr) {
     if (state == ESP_A2D_CONNECTION_STATE_CONNECTED) {
-        seconds = 115;
+        seconds = 118;
+        esp_avrc_tg_send_rn_rsp(ESP_AVRC_RN_PLAY_POS_CHANGED, rnResponse, &rnParams);
     }
     a2dpConnCallback(state);
 }
@@ -125,10 +145,7 @@ void bt_hfp_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param) 
     }
 
     if (details != 0) {
-        Serial.printf("HFP CB Details: %d\n", details);
         phoneDataCallback(details, &sourceData);
-    } else {
-        Serial.println("Details was null, most likely nothing changed.");
     }
 }
 

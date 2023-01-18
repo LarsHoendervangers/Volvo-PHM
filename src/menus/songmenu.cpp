@@ -7,37 +7,38 @@ SongMenu::SongMenu() {
 }
 
 void SongMenu::update() {
-    if (isPlaying) {
-        // TODO: Update playtime here.
-    }
-
-    if (songTitle != 0) {
-        if (songTitle.length() > 16) {
-            // Display::getInstance().scrollText(0, 0, 16, songTitle.c_str(), &textPos);
-        }
-    }
-
-    if (songArtist != 0) {
-        
+    if (shouldUpdate) {
+        // for (int i = 0; i < 32; i++) message[i] = ' ';
+        Display::getInstance().clear();
+        shouldUpdate = false;
+        Display::getInstance().print(message);
     }
 }
 
-void SongMenu::setSongTitle(String title) {
+void SongMenu::setSongTitle(char* title) {
     if (title == 0) return;
     songTitle = title;
-    if (songTitle.length() <= 16) {
-        for (int i = 0; i < 16; i++) {
-            message[i] = songTitle.charAt(i);
-        }
-    }
-    // Display::getInstance().updateLine(0, title.c_str());
+    strncpy(message, title, 16);
+    shouldUpdate = true;
 }
 
-void SongMenu::setSongArtist(String artist) {
+void SongMenu::setSongArtist(char* artist) {
     if (artist == 0) return;
     songArtist = artist;
+    strncpy(message + 16, artist, 16);
+    shouldUpdate = true;
 }
 
-void SongMenu::setSongDuration(unsigned long duration) {
-    songDuration = &duration;
+void SongMenu::setSongDuration(int duration) {
+    songDuration = duration;
+    shouldUpdate = true;
+    Serial.print("Duration: ");
+    Serial.println(duration);
+}
+
+void SongMenu::setSongPlayback(int playback) {
+    songPlayback = playback;
+    shouldUpdate = true;
+    Serial.print("Playback: ");
+    Serial.println(playback);
 }

@@ -45,33 +45,42 @@ void onPhoneDetailsChanged(PhoneDetails detail, phoneData* data) {
 
         if (detail & SERVICE_PROVIDER) {
             mainMenu.setServiceProvider(data->serviceProvider);
-            Serial.print(data->serviceProvider);
-            Serial.println("Updating service provider");
         }
 
         if (detail & BATTERY) {
             mainMenu.setBatteryLevel(data->batteryLevel);
-            Serial.print(data->batteryLevel);
-            Serial.println("Updating battery level");
         }
 
         if (detail & ROAMING) {
             mainMenu.setRoaming(data->roaming);
-            Serial.print(data->roaming);
-            Serial.println("Updating roaming");
         }
 
         if (detail & SERVICE_STRENGTH) {
             mainMenu.setNetworkStrength(data->serviceStrength);
-            Serial.print(data->serviceStrength);
-            Serial.println("Updating service strength");
         }
         xSemaphoreGive(menuIndexSemaphore);
     }
 }
 
 void onSongUpdated(MusicDetails details, musicData* data) {
+    if (xSemaphoreTake(menuIndexSemaphore, (TickType_t) 5) == pdTRUE) {
+        if (details & ARTIST) {
+            songMenu.setSongArtist(data->artist);
+        }
 
+        if (details & TITLE) {
+            songMenu.setSongTitle(data->title);
+        }
+
+        if (details & DURATION) {
+            songMenu.setSongDuration(data->duration);
+        }
+
+        if (details & PLAYBACK) {
+            songMenu.setSongPlayback(data->playback);
+        }
+        xSemaphoreGive(menuIndexSemaphore);
+    }
 }
 
 void setup() {

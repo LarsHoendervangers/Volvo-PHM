@@ -17,6 +17,8 @@ typedef struct musicData {
     char title[128];
     char artist[64];
     int duration = -1;
+    int playback = -1;
+    bool isPlaying = 0;
 } musicData;
 
 enum PhoneDetails {
@@ -34,7 +36,8 @@ inline PhoneDetails operator|(PhoneDetails a, PhoneDetails b) {
 enum MusicDetails {
     TITLE = 1,
     ARTIST = 2,
-    DURATION = 4
+    DURATION = 4,
+    PLAYBACK = 8
 };
 
 inline MusicDetails operator|(MusicDetails a, MusicDetails b) {
