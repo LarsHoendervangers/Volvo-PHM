@@ -28,7 +28,7 @@ Keys pinout:
 23:
 24:
 25:
-26:
+26: Power button
 27:
 28: 
 29: 5V (maybe 3.3V works as well? I use 5V)
