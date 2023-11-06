@@ -3,7 +3,6 @@
 createSafeString(buffer, 256);
 createSafeString(config, 20 * 18);
 
-
 RN52::RN52() {}
 
 void RN52::begin() {
@@ -66,7 +65,13 @@ void RN52::processBuffer() {
     }
   } else if (buffer.startsWith("AGBatteryLevel")) { // 'GB' command
     Serial.println("GB Command");
-    this->ag.batteryLevel = 10;
+    int index = buffer.indexOf("=") + 1;
+    int endIndex = buffer.indexOf("%");
+    char battery[3];
+    for (int i = index; i < endIndex; i++) {
+      battery[i - index] = buffer.charAt(i);
+    }
+    this->ag.batteryLevel = atoi(battery);
   }
 
   buffer.clear();
