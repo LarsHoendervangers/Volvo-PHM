@@ -1,3 +1,7 @@
+# Update 1-6-2024
+I am currently working on a new solution using a custom PCB and different hardware. I might even integrate it into my custom RTI solution, but for now I'm leaving this repository as is.
+
+
 # Volvo-PHM
 
 This project is designed to work on an ESP32 connected to the official Volvo Phone Module (2005-2009).
